@@ -25,25 +25,15 @@ int cstring_compare_fuzzy(char *cstr1, char *cstr2);
 int string_slice_compare_fuzzy(String_Slice *s1, String_Slice *s2);
 int string_slice_compare_cstring_fuzzy(String_Slice *str, char *cstr);
 
-
 #ifdef COPPER_STRING_SLICER
 typedef struct String_Slices String_Slices;
-String_Slices string_slice_split_strict(String_Slice *source, String_Slice *delimiters);
-String_Slices string_slice_split_strict_cstring(String_Slice *source, char *delimiters);
-String_Slices string_slice_split(String_Slice *source, String_Slice *delimiters);
-String_Slices string_slice_split_cstring(String_Slice *source, char *delimiters);
 #endif
+
 #ifdef COPPER_STRING_FACTORY
 typedef struct String_Factory String_Factory;
 void string_factory_append_cstring(String_Factory *builder, char *cstr);
 void string_factory_read_from_file(String_Factory *builder, const char *path);
 void string_factory_write_to_file(String_Factory *builder, const char *path);
-#endif
-#if defined(COPPER_STRING_FACTORY) && defined(COPPER_STRING_SLICER)
-String_Slices string_factory_split_strict(String_Factory *builder, String_Slice *delimiters);
-String_Slices string_factory_split_strict_cstring(String_Factory *builder, char *delimiters);
-String_Slices string_factory_split(String_Factory *builder, String_Slice *delimiters);
-String_Slices string_factory_split_cstring(String_Factory *builder, char *delimiters);
 #endif
 
 #endif
@@ -259,8 +249,36 @@ struct String_Slices {
 #define string_slices_pop(strs, str) da_pop((strs), (str))
 #define string_slices_pop_all(strs, str) da_pop_all((strs), (str))
 #endif
+/*
+String_Slice copper__buffer_split_one(char *str1, size_t len1, char *str2, size_t len2){
+    String_Slice result = {0};
 
-String_Slices __buffer_split_strict(char *str1, size_t len1, char *str2, size_t len2){
+    size_t offset = 0;
+    size_t is_valid = 0;
+    for(size_t i = 0; i < len1; i++){
+        is_valid = 1;
+        for(size_t j = 0; j < len2; j++){
+            if (str1[i] == str2[j]) is_valid = 0;
+        }
+
+        if(is_valid == 0){
+            offset++;
+        }
+
+        if(is_valid == 1){
+            if(offset > 0){
+                temp.begin = str1 + i;
+                temp.len = 0;
+                offset = 0;
+            }
+            temp.len++;
+        }
+    }
+    
+    return result;
+}
+*/
+String_Slices copper__buffer_split_strict(char *str1, size_t len1, char *str2, size_t len2){
     String_Slices result = {0};
     String_Slice temp = {
         .begin = str1,
@@ -296,7 +314,7 @@ String_Slices __buffer_split_strict(char *str1, size_t len1, char *str2, size_t 
     return result;
 }   //Lengths have excluded \0 at the end of buffers
 
-String_Slices __buffer_split(char *str1, size_t len1, char *str2, size_t len2){
+String_Slices copper__buffer_split(char *str1, size_t len1, char *str2, size_t len2){
     String_Slices result = {0};
     String_Slice temp = {
         .begin = str1,
@@ -329,42 +347,6 @@ String_Slices __buffer_split(char *str1, size_t len1, char *str2, size_t len2){
     
     return result;
 }
-
-String_Slices string_slice_split_strict(String_Slice *source, String_Slice *delimiters){
-    return __buffer_split_strict(source->begin, source->len, delimiters->begin, delimiters->len);
-}
-
-String_Slices string_slice_split_strict_cstring(String_Slice *source, char *delimiters){
-    return __buffer_split_strict(source->begin, source->len, delimiters, cstring_len(delimiters));
-}
-
-String_Slices string_slice_split(String_Slice *source, String_Slice *delimiters){
-    return __buffer_split(source->begin, source->len, delimiters->begin, delimiters->len);
-}
-
-String_Slices string_slice_split_cstring(String_Slice *source, char *delimiters){
-    return __buffer_split(source->begin, source->len, delimiters, cstring_len(delimiters));
-}
-
 #endif
 
-#if defined(COPPER_STRING_FACTORY) && defined(COPPER_STRING_SLICER)
-
-String_Slices string_factory_split_strict(String_Factory *builder, String_Slice *delimiters){
-    return __buffer_split_strict(builder->data, cstring_len(builder->data), delimiters->begin, delimiters->len);
-}
-
-String_Slices string_factory_split_strict_cstring(String_Factory *builder, char *delimiters){
-    return __buffer_split_strict(builder->data, cstring_len(builder->data), delimiters, cstring_len(delimiters));
-}
-
-String_Slices string_factory_split(String_Factory *builder, String_Slice *delimiters){
-    return __buffer_split(builder->data, cstring_len(builder->data), delimiters->begin, delimiters->len);
-}
-
-String_Slices string_factory_split_cstring(String_Factory *builder, char *delimiters){
-    return __buffer_split(builder->data, cstring_len(builder->data), delimiters, cstring_len(delimiters));
-}
-
-#endif
 #endif
