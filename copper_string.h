@@ -2,7 +2,7 @@
 // Possible solution: NULL?
 #ifndef COPPER_STRING_H
 #define COPPER_STRING_H
-#include "types.h"
+#include "copper_types.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
